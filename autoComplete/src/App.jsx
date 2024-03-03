@@ -1,56 +1,63 @@
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import data from "./components/countryData.json";
 import "./App.css"
 
 function App() {
-  const [value, setValue] = useState("");
+  const [place, setPlace] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [escapePressed, setEscapePressed] = useState(false);
 
-  const handleChange = (event) => {
-    setValue(event.target.value);
+  const findPlace = (e) => {
+    let value = e.target.value;
+    setPlace(value);
+
+    let suggestion = data.filter((resource) =>
+      resource.name.toLowerCase().startsWith(value.toLowerCase())
+    );
+    setSuggestions(suggestion);
   };
-   const handleSearch=()=>{
-    setTimeout( ()=>{
-    
-      document.getElementById('top-search').innerHTML = `Searching for ${value}...`
-     }, 1000)
-   }
 
-  const keyPress = (e)=>{
-    if(e.key==="Escape"){
-      console.log(e.key)
-      document.getElementById("dropdown").style.display = "none";
+  const displayList = () => {
+    return suggestions.map((suggestion, index) => (
+      <div key={index}>{suggestion.name}</div>
+    ));
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setPlace('');
+        setSuggestions([]); 
+        setEscapePressed(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if (escapePressed) {
+      setEscapePressed(false);
     }
-    else{
-      document.getElementById("dropdown").style.display = "block";
-    }
-  }
+  }, [escapePressed]);
 
   return (
-    <div className="App">
-      <h1 id="top-search">Search</h1>
-      <div>
-        <div>
-          <input type="text" value={value} onChange={handleChange} onKeyDown={keyPress} />
-          <button onClick={handleSearch}>Search </button>
-        </div>
-        <div id="dropdown">
-          {data.filter((e) => {
-              return (
-                value &&
-                e.name.startsWith(value)  &&
-                e.name !== value
-              );
-            })
-            .map((i) => {
-              return (
-              <div onClick={() => setValue(i.name)}>
-                {i.name}
-              </div>
-            )})}
-        </div>
-      </div>
+    <div class="app">
+      <input
+        type="text"
+        class="input"
+        onChange={findPlace}
+        placeholder="Enter country name"
+      />
+      <button>Search</button>
+      {displayList()}
     </div>
   );
-}
+}         
 
 export default App
